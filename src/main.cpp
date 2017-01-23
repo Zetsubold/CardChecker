@@ -12,7 +12,7 @@
 #include "logging.h"
 
 const std::string PROGRAM_NAME = "CardChecker";
-const std::string VERSION = "1.0";
+const std::string VERSION = "1.1";
 
 /*	CardChecker
  * 	-----------
@@ -24,6 +24,8 @@ const std::string VERSION = "1.0";
  * 
  *	v0.1		- development version
  * 	v1.0		- initial release
+ *	v1.1		- solving the waifu problem
+ * 
  */
 
 using namespace std;
@@ -31,7 +33,7 @@ using namespace std;
 // my standard "do things to files" template
 
 
-bool process(vector<string> & paths)
+bool process(vector<string> & paths, bool save_chara)
 {
 	bool result = true;
 	
@@ -42,7 +44,7 @@ bool process(vector<string> & paths)
 		vector<FileData> file_listing;
 		get_filtered_files(file_listing, *iter, ".png", cout, true);
 		
-		result = result && cards.construct(file_listing);
+		result = result && cards.construct(file_listing, save_chara);
 	}
 	
 	
@@ -60,11 +62,14 @@ int main(int argc, char *argv[])
 	
 	string logname = PROGRAM_NAME + " log.txt";
 	
-	open_log(logname, logging::full, logheader.str());
+	logstream.open(logname, Log_Stream::standard, logheader.str());
 	
+	if ( logstream.test_level(Log_Stream::extra) )
+		logstream << "why me show up?" << endl;
+
 	//	do we even have input?
     if (argc==1) {
-		logfile <<	"ERROR - no input folder given, session aborted." << endl;
+		logstream <<	"ERROR - no input folder given, session aborted." << endl;
 		cout << "NO INPUT FOLDER DETECTED" << endl;
 		cout << "Try dragging a folder onto the program. :)" << endl;
 		system("PAUSE");
@@ -72,16 +77,31 @@ int main(int argc, char *argv[])
 	}
 	
 	vector<string> paths;
+	bool save_chara = false;
        
     //	iterate through all files on command line
 
     for (int i=1; i<argc; i++) {
         string argstring = argv[i];
+		
+		if (argstring == "DEBUG") {
+			cout << "Extra debugging info will be saved to " << logname << endl;
+			logstream.set_level(Log_Stream::debug);
+			continue;
+		}
+		
+		if (argstring == "CHARA") {
+			cout << "Basic Character card data will be extracted as .chara files" << endl;
+			logstream.set_level(Log_Stream::debug);
+			save_chara = true;
+			continue;
+		}
+		
 
 		bool isfolder = is_folder(argstring);
        
         if (!isfolder) {
-			logfile <<	"ERROR - not given a folder, session aborted." << endl;
+			logstream <<	"ERROR - not given a folder, session aborted." << endl;
 			cout << "HELP! NO FOLDER DETECTED" << endl;
 			cout << "Whatever you gave me wasn't a folder. Please try again:)" << endl;
 			system("PAUSE");
@@ -94,7 +114,7 @@ int main(int argc, char *argv[])
 	
 	
 	//	Process the list of paths
-	if ( !process(paths) )
+	if ( !process(paths, save_chara) )
 		cout << "Strange things happened. Please check " << logname << " for details" << endl;
 
     system("PAUSE");

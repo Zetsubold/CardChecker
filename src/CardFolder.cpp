@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iomanip>
 
 #include "CardFolder.h"
 #include "card.h"
@@ -15,7 +16,7 @@ CardFolder::~CardFolder()
 {
 }
 
-bool CardFolder::construct(std::vector<FileData> & file_list)
+bool CardFolder::construct(std::vector<FileData> & file_list, bool save_chara)
 {
 	//  builds the card_hashes set from the file list provided
 
@@ -23,7 +24,10 @@ bool CardFolder::construct(std::vector<FileData> & file_list)
 	
 	cout << "Found " << file_list.size() << " candidate files.  Starting scanning..." << endl;
 
-	logfile << "scanning " << file_list.size() << " files." << endl;
+	logstream << "scanning ";
+	logstream << file_list.size();
+	logstream << " files.";
+	logstream << endl;
 	
 	//	for each entry in file_list
 	for (vector<FileData>::iterator iter=file_list.begin(); iter!=file_list.end(); iter++) {
@@ -34,7 +38,7 @@ bool CardFolder::construct(std::vector<FileData> & file_list)
 			continue;
 
 		//  1. create Card object from file
-		Card card(iter->name);
+		Card card(iter->name, save_chara);
 		
 		if ( card.process() ) {
 		//	2. Get hash from card
@@ -56,16 +60,28 @@ void CardFolder::process(const std::string & filename)
 	
 	bool clear = true;
 	
+	string lasthash = "hash";
+	
 	// for each hash stored
 	for (map_iterator iter=card_hashes.begin(); iter!=card_hashes.end(); iter++) {
+		
+		logstream << Log_Stream::debug << iter->first << " -- " << iter->second << endl;
+		
 		if (card_hashes.count(iter->first) > 1) {
 			dupes_found++;
-			
-			if (clear) {
+
+			if ((lasthash != iter->first) || (clear)) {
+				if (lasthash != iter->first)
+					out_file << "\n";
+					
 				out_file << "These " << card_hashes.count(iter->first) << " files might be duplicates\n";
-				dupe_groups++;
-			}
 				
+				logstream << Log_Stream::debug << "These " << card_hashes.count(iter->first) << " files might be duplicates\n";
+
+				dupe_groups++;
+				lasthash = iter->first;
+			}
+			
 			out_file << "\t" << iter->second << endl;
 			clear = false;
 		}
@@ -76,17 +92,19 @@ void CardFolder::process(const std::string & filename)
 			}
 	}
 	
+	logstream.reset_level();
+	
 	//	catch that the last entries might be groups
 	if (!clear)
 		out_file << "\n";
 	
 	//	send result to various outputs
-	out_file << "in total " << dupes_found << " duplicates found in " << dupe_groups << " groups." << endl;
+	out_file << "in total " << dupes_found << " duplicates, in " << dupe_groups << " groups." << endl;
 	if ( (dupe_groups+dupes_found) == 0 )
 		cout << "No duplicates found" << endl;
 	else {
-		cout << "Found " << dupes_found << " duplicates found in " << dupe_groups << " groups." << endl;
+		cout << "Found " << dupes_found << " duplicates, in " << dupe_groups << " groups." << endl;
 		cout << "Check " << filename << " for details." << endl;
 	}
-	logfile << "Found " << dupes_found << " duplicates found in " << dupe_groups << " groups." << endl;
+	logstream << "Found " << dupes_found << " duplicates, in " << dupe_groups << " groups." << endl;
 }

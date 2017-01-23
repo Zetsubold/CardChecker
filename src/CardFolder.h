@@ -17,7 +17,7 @@ class CardFolder
 public:
 	CardFolder();
 	
-	bool construct(std::vector<FileData> & file_list);
+	bool construct(std::vector<FileData> & file_list, bool save_chara = false);
 	void process(const std::string & filename);
 
 	unsigned int get_count() { return dupes_found; } ;

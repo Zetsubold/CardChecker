@@ -56,3 +56,4 @@ CardChecker.txt
 CardChecker.tags
 CardChecker.project
 CardChecker.mk
+CardChecker/*.exe
