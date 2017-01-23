@@ -144,5 +144,5 @@ void get_filtered_files(std::vector<FileData> & file_list, const std::string & P
         closedir(dir_stream);
     }
 	else
-		logfile << "ERROR -- " << path_name << " not opened as a directory.";
+		logstream << "ERROR -- " << path_name << " not opened as a directory.";
 }

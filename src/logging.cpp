@@ -10,42 +10,24 @@ using namespace std;
 
 #include "logging.h"
 
-ofstream logfile;
+Log_Stream logstream;
 
-logging loglevel;
-
-bool logging_suppress;
-
-
-void log_cleanup()
+Log_Stream::~Log_Stream()
 {
-	if (logfile.is_open()) {
-		logfile << '\n' << setw(80) << setfill('=') << "=" << "\n";
-		logfile.close();
+	if (base_stream.is_open()) {
+		base_stream << '\n' << setw(80) << setfill('=') << "=" << "\n";
+		base_stream.close();
 	}
 }
 
-
-
-void open_log(const string & filename, const logging level, const string & starttext)
+void Log_Stream::open(const string & filename, const logging level, const string & starttext)
 {
-    logfile.open(filename, ios_base::app);
-
-	atexit(&log_cleanup);
+    base_stream.open(filename, ios_base::app);
 
 	time_t runtime = time(NULL);
 
-	logfile << starttext << "\t\t - session run at " << ctime(&runtime) << endl;
+	base_stream << starttext << "\t\t - session run at " << ctime(&runtime) << endl;
 	
-	loglevel = level;
-}
-
-string logsuppress(const string & s)
-{
-	if (logging_suppress) {
-		logging_suppress = false;
-		return ">>not shown<<";
-	}
-	else
-		return s;
+	logging_level = level;
+	current_level = level;
 }
